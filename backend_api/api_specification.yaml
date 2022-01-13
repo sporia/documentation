@@ -1,0 +1,608 @@
+openapi: 3.0.0
+servers: 
+  - url: https://www.sporia.ch/TODO
+
+info:
+  description: |
+    API to access court and reservation information for
+    Sporia customer's courts
+  version: "1.0.0"
+  title: Sporia Backend API
+  contact:
+    email: samuel.pearce@sporia.ch
+    
+tags:
+  - name: Public
+    description: |
+      Endpoints that can be accessed by anyone
+  - name: Auth
+    description: |
+      Endpoints that require a token
+      
+paths:
+  /token:
+    post:
+      tags:
+        - Public
+      summary: Get refresh token & access token
+      description: |
+        Authenticates the user with username & password
+        and responds with access token and refresh token
+        Note: grant_type should be "password" for front-end.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - grant_type
+                - username
+                - password
+              properties:
+                grant_type:
+                  type: string
+                  format: grant_type
+                  example: password
+                username:
+                  $ref: '#/components/schemas/Email'
+                password:
+                  $ref: '#/components/schemas/Password'
+      responses:
+        '200':
+          description: |
+            Successfully authenticated the user's credentials
+            and responds with access token and refresh token
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - access_token
+                  - token_type
+                  - expires_in
+                  - refresh_token
+                properties:
+                  access_token:
+                    $ref: '#/components/schemas/Token'
+                  token_type:
+                    type: string
+                    format: token_type
+                    example: bearer
+                  expires_in:
+                    type: integer
+                    format: seconds
+                    example: 3600
+                  refresh_token:
+                    $ref: '#/components/schemas/Token'
+        '400':
+          description: |
+            Authentication failed. Error code is
+            given in response. See RFC 6749, Section
+            5.2 for a list of responses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:       # Note: This endpoint may also be implemented as POST, varying
+      tags:    #       based on the "grant_type" alone.
+        - Public
+      summary: Get access token
+      description: |
+        Authenticates the user with username & password
+        and responds with access token and refresh token
+        Note: grant_type must be "refresh_token".
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - grant_type
+                - refresh_token
+              properties:
+                grant_type:
+                  type: string
+                  format: grant_type
+                  example: password
+                username:
+                  $ref: '#/components/schemas/Token'
+      responses:
+        '200':
+          description: |
+            Successfully authenticated the user's credentials
+            and responds with access token
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - access_token
+                  - token_type
+                  - expires_in
+                properties:
+                  access_token:
+                    $ref: '#/components/schemas/Token'
+                  token_type:
+                    type: string
+                    format: token_type
+                    example: bearer
+                  expires_in:
+                    type: integer
+                    format: seconds
+                    example: 3600
+        '400':
+          description: |
+            Authentication failed. Error code is
+            given in response. See RFC 6749, Section
+            5.2 for a list of responses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /user:
+    post:
+      tags:
+        - Public
+      summary: Create User
+      description: |
+        Adds a user to the database
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided user object does not match the
+            requirements.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Auth
+      summary: Get Users
+      description: |
+        Returns an array of all users
+      security:
+        - BearerToken: []
+      responses:
+        '200':
+          description: |
+            A list of users or a single user entry
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponse'
+  
+  /user/{user_id}:
+    get:
+      tags:
+        - Auth
+      summary: Get User
+      description: |
+        Returns a single user entry matching
+        the provided user id
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: user_id
+          description: |
+            The UUID of the user being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: |
+            A user entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: |
+            The provided user ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No user with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Auth
+      summary: Edit User
+      description: |
+        Takes a user object and updates the
+        given user accordingly. ID cannot be
+        changed. Any fields left out of the
+        request will be left as they are.
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: user_id
+          description: |
+            The UUID of the user being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided user ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No user with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Auth
+      summary: Delete User
+      description: |
+        Takes a user's ID and deletes them
+        from the database, permanently
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: user_id
+          description: |
+            The UUID of the user being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided user ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No user with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /court/{court_id}:
+    post:
+      tags:
+        - Auth
+      summary: Create Court
+      description: |
+        Adds a court to the database
+      parameters:
+        - in: path
+          name: court_id
+          description: |
+            The UUID of the court being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Court'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided court object does not match the
+            requirements.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Auth
+      summary: Get Court
+      description: |
+        Returns an array of courts or a single court entry
+        if provided with a court's ID.
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: court_id
+          description: |
+            The UUID of the court being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: |
+            A list of courts or a single court entry
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Court'
+        '400':
+          description: |
+            The provided court ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No court with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Auth
+      summary: Edit Court
+      description: |
+        Takes a court object and updates the
+        given court accordingly. ID cannot be
+        changed. Any fields left out of the
+        request will be left as they are.
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: court_id
+          description: |
+            The UUID of the court being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Court'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided court ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No court with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Auth
+      summary: Delete Court
+      description: |
+        Takes a court's ID and deletes it
+        from the database, permanently
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: court_id
+          description: |
+            The UUID of the court being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided court ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No court with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    BearerToken:
+      type: http
+      scheme: bearer
+        
+    
+  schemas:
+    User:
+      type: object
+      required:
+        - user_id
+        - email
+        - password
+        - first_name
+        - last_name
+      properties:
+        user_id:
+          $ref: '#/components/schemas/UUID'
+        email:
+          $ref: '#/components/schemas/Email'
+        password:
+          $ref: '#/components/schemas/Password'
+        first_name:
+          type: string
+          format: name
+          example: John
+        last_name:
+          type: string
+          format: name
+          example: Smith
+
+    UserResponse:
+      type: object
+      required:
+        - user_id
+        - email
+        - first_name
+        - last_name
+      properties:
+        user_id:
+          $ref: '#/components/schemas/UUID'
+        email:
+          $ref: '#/components/schemas/Email'
+        first_name:
+          type: string
+          format: name
+          example: John
+        last_name:
+          type: string
+          format: name
+          example: Smith
+    
+    Court:
+      type: object
+      required:
+        - court_id
+        - number
+        - is_indoors
+        - is_active
+        - comment
+        - pos_x
+        - pos_y
+        - pos_angle
+      properties:
+        court_id:
+          $ref: '#/components/schemas/UUID'
+        number:
+          type: string
+          format: court_number
+          example: 13b
+        is_indoors:
+          type: boolean
+          format: boolean
+          example: true
+        is_active:
+          type: boolean
+          format: boolean
+          example: true
+        comment:
+          type: string
+          format: comment
+          example: This court is out of service at the moment due to repairs
+        pos_x:
+          type: integer
+          format: coordinate
+          example: 72
+        pos_y:
+          type: integer
+          format: coordinate
+          example: 25
+        pos_angle:
+          type: integer
+          format: angle
+          example: 45
+    
+    Error:
+      description: |
+        ## Possible Error Codes:
+          - `invalid_request`: A required parameter is missing
+            from the request
+          - `invalid_grant`: The grant provided is not valid;
+            i.e. the credentials are invalid
+          - `unsupported_grant_type`: This grant type is not
+            supported by the server. The server only supports
+            the "resource owner password credentials" grant type. See:
+            [RFC6749](https://datatracker.ietf.org/doc/html/rfc6749)
+            (`grant_type` must be set to `password`)
+      type: object
+      required:
+        - error
+        - error_description
+      properties:
+        error:
+          type: string
+          format: ascii
+          example: invalid_request
+        error_description:
+          type: string
+          format: ascii
+          example: The request is missing a required parameter
+        error_url:
+          type: string
+          format: uri
+          example: https://www.sporia.ch/support/api/invalid_request
+        
+    
+    Token:
+      type: string
+      format: JWT
+      example: |
+        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+        .eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ
+        .SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+    UUID:
+      type: string
+      format: uuid
+      example: d290f1ee-6c54-4b01-90e6-d701748f0851
+    Email:
+      type: string
+      format: email
+      example: john.smith@example.org
+    Password:
+      type: string
+      format: password
+      example: correcthorsebatterystaple
