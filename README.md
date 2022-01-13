@@ -9,8 +9,8 @@ need here so it's centrally available.
 ### Back-End
  - [Database Diagram (Drawio)](https://github.com/sporia/documentation/blob/main/database/DB_Model.drawio)
  - [Database Diagram (PNG)](https://github.com/sporia/documentation/blob/main/database/DB_Model.png)
- - ~~[Database Script (SQL)](https://github.com/sporia/documentation/blob/main/database/01_Create_Database.sql)
- - ~~[Backend API specification]()
+ - ~~[Database Script (SQL)](https://github.com/sporia/documentation/blob/main/database/01_Create_Database.sql)~~
+ - ~~[Backend API specification]()~~
 
 ## Wiki Pages
 ### Front-End
