@@ -16,3 +16,4 @@ need here so it's centrally available.
 ### Front-End
 ### Back-End
  - [API Error Codes](https://github.com/sporia/documentation/wiki/API-Error-Codes)
+ - [Tenant Options](https://github.com/sporia/documentation/wiki/Tenant-Options)
