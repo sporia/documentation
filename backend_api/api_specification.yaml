@@ -12,18 +12,34 @@ info:
     email: samuel.pearce@sporia.ch
     
 tags:
-  - name: Public
-    description: |
-      Endpoints that can be accessed by anyone
   - name: Auth
     description: |
-      Endpoints that require a token
+      Endpoints required for authentication
+  - name: Options
+    description: |
+      Endpoints for editing and retrieving tenant preferences
+  - name: User
+    description: |
+      Endpoints that manage user entries
+  - name: Court
+    description: |
+      Endpoints that manage court entries
+  - name: Category
+    description: |
+      Endpoints that manage category entries
+  - name: Timeblock
+    description: |
+      Endpoints that manage timeblock entries
+  - name: Reservation
+    description: |
+      Endpoints that manage reservation entries
+
       
 paths:
   /token:
     post:
       tags:
-        - Public
+        - Auth
       summary: Get refresh token & access token
       description: |
         Authenticates the user with username & password
@@ -86,7 +102,7 @@ paths:
                 $ref: '#/components/schemas/Error'
     put:       # Note: This endpoint may also be implemented as POST, varying
       tags:    #       based on the "grant_type" alone.
-        - Public
+        - Auth
       summary: Get access token
       description: |
         Authenticates the user with username & password
@@ -142,10 +158,65 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+
+  /options:
+    get:
+      tags:
+        - Options
+      summary: Get Options
+      description: |
+        Returns the lis of JSON key pairs that
+        define the options for this tenant
+        
+        See [the documentation](https://github.com/sporia/documentation/wiki/Tenant-Options)
+        for a comprehensive list of options.
+      security:
+        - BearerToken: []
+      responses:
+        '200':
+          description: |
+            The tenant's options in JSON format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Options'
+    put:
+      tags:
+        - Options
+      summary: Set Options
+      description: |
+        Takes a json object of options with their new values
+        and assigns them accordingly.
+        
+        See [the documentation](https://github.com/sporia/documentation/wiki/Tenant-Options)
+        for a comprehensive list of options.
+      security:
+        - BearerToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Options'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            One or any of the parameters is invalid.
+            An error message is returned with more info.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      
+          
+
   /user:
     post:
       tags:
-        - Public
+        - User
       summary: Create User
       description: |
         Adds a user to the database
@@ -169,7 +240,7 @@ paths:
                 $ref: '#/components/schemas/Error'
     get:
       tags:
-        - Auth
+        - User
       summary: Get Users
       description: |
         Returns an array of all users
@@ -185,11 +256,41 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserResponse'
+  /user/import:
+    post:
+      tags:
+        - User
+      summary: Import Users
+      description: |
+        Takes a list of users and
+        adds them all at once
+      security:
+        - BearerToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/User'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided user object does not match the
+            requirements.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   
   /user/{user_id}:
     get:
       tags:
-        - Auth
+        - User
       summary: Get User
       description: |
         Returns a single user entry matching
@@ -228,7 +329,7 @@ paths:
                 $ref: '#/components/schemas/Error'
     put:
       tags:
-        - Auth
+        - User
       summary: Edit User
       description: |
         Takes a user object and updates the
@@ -271,7 +372,7 @@ paths:
                 $ref: '#/components/schemas/Error'
     delete:
       tags:
-        - Auth
+        - User
       summary: Delete User
       description: |
         Takes a user's ID and deletes them
@@ -306,21 +407,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /court/{court_id}:
+
+  /court:
     post:
       tags:
-        - Auth
+        - Court
       summary: Create Court
       description: |
         Adds a court to the database
-      parameters:
-        - in: path
-          name: court_id
-          description: |
-            The UUID of the court being requested
-          required: true
-          schema:
-            $ref: '#/components/schemas/UUID'
+      security:
+        - BearerToken: []
       requestBody:
         content:
           application/json:
@@ -341,11 +437,62 @@ paths:
                 $ref: '#/components/schemas/Error'
     get:
       tags:
-        - Auth
+        - Court
+      summary: Get Courts
+      description: |
+        Returns an array of all courts.
+      security:
+        - BearerToken: []
+      responses:
+        '200':
+          description: |
+            A list of courts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Court'
+
+  /court/import:
+    post:
+      tags:
+        - Court
+      summary: Import Courts
+      description: |
+        Takes a list of courts and
+        adds them all at once
+      security:
+        - BearerToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Court'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided court object does not match the
+            requirements.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /court/{court_id}:
+    get:
+      tags:
+        - Court
       summary: Get Court
       description: |
-        Returns an array of courts or a single court entry
-        if provided with a court's ID.
+        Returns a single court entry
+        and requires a court's ID.
       security:
         - BearerToken: []
       parameters:
@@ -359,7 +506,7 @@ paths:
       responses:
         '200':
           description: |
-            A list of courts or a single court entry
+            A single court entry
           content:
             application/json:
               schema:
@@ -382,7 +529,7 @@ paths:
                 $ref: '#/components/schemas/Error'
     put:
       tags:
-        - Auth
+        - Court
       summary: Edit Court
       description: |
         Takes a court object and updates the
@@ -425,7 +572,7 @@ paths:
                 $ref: '#/components/schemas/Error'
     delete:
       tags:
-        - Auth
+        - Court
       summary: Delete Court
       description: |
         Takes a court's ID and deletes it
@@ -460,6 +607,607 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+
+  /category:
+    post:
+      tags:
+        - Category
+      summary: Create Category
+      description: |
+        Adds a category to the database
+      security:
+        - BearerToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided category object does not match the
+            requirements.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Category
+      summary: Get Categories
+      description: |
+        Returns an array of all categories.
+      security:
+        - BearerToken: []
+      responses:
+        '200':
+          description: |
+            A list of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+
+  /category/import:
+    post:
+      tags:
+        - Category
+      summary: Import Categories
+      description: |
+        Takes a list of categories and
+        adds them all at once
+      security:
+        - BearerToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Category'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided category object does not match the
+            requirements.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /category/{cat_id}:
+    get:
+      tags:
+        - Category
+      summary: Get Category
+      description: |
+        Returns a single category entry
+        and requires a category's ID.
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: cat_id
+          description: |
+            The UUID of the category being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: |
+            A single category entry
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '400':
+          description: |
+            The provided category ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No category with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Category
+      summary: Edit Category
+      description: |
+        Takes a category object and updates the
+        given category accordingly. ID cannot be
+        changed. Any fields left out of the
+        request will be left as they are.
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: cat_id
+          description: |
+            The UUID of the category being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided category ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No category with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Category
+      summary: Delete Category
+      description: |
+        Takes a category's ID and deletes it
+        from the database, permanently
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: cat_id
+          description: |
+            The UUID of the category being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided category ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No category with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+  /timeblock:
+    post:
+      tags:
+        - Timeblock
+      summary: Create Timeblock
+      description: |
+        Adds a time-block to the database
+      security:
+        - BearerToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Timeblock'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided time-block object does not match the
+            requirements.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Timeblock
+      summary: Get Timeblocks
+      description: |
+        Returns an array of all time-blocks.
+      security:
+        - BearerToken: []
+      responses:
+        '200':
+          description: |
+            A list of time-blocks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Timeblock'
+                  
+  /timeblock/import:
+    post:
+      tags:
+        - Timeblock
+      summary: Import Timeblocks
+      description: |
+        Takes a list of time-blocks and
+        adds them all at once
+      security:
+        - BearerToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Timeblock'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided time-block object does not match the
+            requirements.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /timeblock/{time_id}:
+    get:
+      tags:
+        - Timeblock
+      summary: Get Timeblock
+      description: |
+        Returns a single time-block entry
+        and requires a time-block's ID.
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: time_id
+          description: |
+            The UUID of the time-block being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: |
+            A single time-block entry
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Timeblock'
+        '400':
+          description: |
+            The provided time-block ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No time-block with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Timeblock
+      summary: Edit Timeblock
+      description: |
+        Takes a time-block object and updates the
+        given time-block accordingly. ID cannot be
+        changed. Any fields left out of the
+        request will be left as they are.
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: time_id
+          description: |
+            The UUID of the time-block being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Timeblock'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided time-block ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No time-block with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Timeblock
+      summary: Delete Timeblock
+      description: |
+        Takes a time-block's ID and deletes it
+        from the database, permanently
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: time_id
+          description: |
+            The UUID of the time-block being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided time-block ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No time-block with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+  /reservation:
+    post:
+      tags:
+        - Reservation
+      summary: Create Reservation
+      description: |
+        Adds a reservation to the database
+      security:
+        - BearerToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reservation'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided reservation object does not match the
+            requirements.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Reservation
+      summary: Get Reservations
+      description: |
+        Returns an array of all reservations.
+      security:
+        - BearerToken: []
+      responses:
+        '200':
+          description: |
+            A list of reservations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReservationDTO'
+
+  /reservation/import:
+    post:
+      tags:
+        - Reservation
+      summary: Import Timeblocks
+      description: |
+        Takes a list of reservations and
+        adds them all at once
+      security:
+        - BearerToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Reservation'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided reservation object does not match the
+            requirements.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /reservation/{res_id}:
+    get:
+      tags:
+        - Reservation
+      summary: Get Reservation
+      description: |
+        Returns a single reservation entry
+        and requires a reservation's ID.
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: res_id
+          description: |
+            The UUID of the reservation being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: |
+            A single reservation entry
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReservationDTO'
+        '400':
+          description: |
+            The provided reservation ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No reservation with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Reservation
+      summary: Edit Reservation
+      description: |
+        Takes a reservation object and updates the
+        given reservation accordingly. ID cannot be
+        changed. Any fields left out of the
+        request will be left as they are.
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: res_id
+          description: |
+            The UUID of the reservation being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reservation'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided reservation ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No reservation with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Reservation
+      summary: Delete Reservation
+      description: |
+        Takes a reservation's ID and deletes it
+        from the database, permanently
+      security:
+        - BearerToken: []
+      parameters:
+        - in: path
+          name: res_id
+          description: |
+            The UUID of the reservation being requested
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: |
+            The server successfully processed the request,
+            and is not returning any content.
+        '400':
+          description: |
+            The provided reservation ID is not a valid UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            No reservation with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
 components:
   securitySchemes:
     BearerToken:
@@ -468,6 +1216,16 @@ components:
         
     
   schemas:
+    Options:
+      type: object
+      required:
+        - AllowUserRegistration
+      properties:
+        AllowUserRegistration:
+          type: boolean
+          format: boolean
+          example: false
+  
     User:
       type: object
       required:
@@ -520,7 +1278,6 @@ components:
         - number
         - is_indoors
         - is_active
-        - comment
         - pos_x
         - pos_y
         - pos_angle
@@ -556,18 +1313,100 @@ components:
           format: angle
           example: 45
     
+    Category:
+      type: object
+      required:
+        - category_id
+        - name
+      properties:
+        category_id:
+            $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          format: name
+          example: Tournament
+        comment:
+          type: string
+          format: comment
+          example: This category involves...
+    
+    Timeblock:
+      type: object
+      required:
+       - start
+       - end
+       - availability
+      properties:
+        start:
+          type: string
+          format: time
+          example: "12:00"
+        end:
+          type: string
+          format: time
+          example: "13:00"
+        availability:
+          description: |
+            Determines whether this time block
+            can be booked or not.
+          type: boolean
+          format: boolean
+          example: false
+
+    Reservation:
+      type: object
+      required:
+       - date
+       - timeblock_id
+       - category_id
+       - court_id
+      properties:
+        date:
+          type: string
+          format: ISO-8601
+          example: "1871-09-02"
+        timeblock_id:
+          $ref: '#/components/schemas/UUID'
+        comment:
+          type: string
+          format: text
+          example: "This is a reservation comment"
+        category_id:
+          $ref: '#/components/schemas/UUID'
+        court_id:
+          $ref: '#/components/schemas/UUID'
+
+    ReservationDTO:
+      type: object
+      required:
+       - date
+       - timeblock
+       - comment
+       - category
+       - court
+      properties:
+        date:
+          type: string
+          format: ISO-8601
+          example: "1871-09-02"
+        timeblock:
+          $ref: '#/components/schemas/Timeblock'
+        comment:
+          type: string
+          format: text
+          example: "This is a reservation comment"
+        category:
+          $ref: '#/components/schemas/Category'
+        court:
+          $ref: '#/components/schemas/Court'
+    
     Error:
       description: |
-        ## Possible Error Codes:
-          - `invalid_request`: A required parameter is missing
-            from the request
-          - `invalid_grant`: The grant provided is not valid;
-            i.e. the credentials are invalid
-          - `unsupported_grant_type`: This grant type is not
-            supported by the server. The server only supports
-            the "resource owner password credentials" grant type. See:
-            [RFC6749](https://datatracker.ietf.org/doc/html/rfc6749)
-            (`grant_type` must be set to `password`)
+        A machine-readable error code and a description of what
+        went wrong.
+        
+        For a list of all possible error codes and their
+        meanings, see [the documentation](https://github.com/sporia/documentation/wiki/API-Error-Codes)
       type: object
       required:
         - error
