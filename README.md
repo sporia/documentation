@@ -10,7 +10,7 @@ need here so it's centrally available.
  - [Database Diagram (Drawio)](https://github.com/sporia/documentation/blob/main/database/DB_Model.drawio)
  - [Database Diagram (PNG)](https://github.com/sporia/documentation/blob/main/database/DB_Model.png)
  - ~~[Database Script (SQL)](https://github.com/sporia/documentation/blob/main/database/01_Create_Database.sql)~~ (WIP)
- - ~~[Backend API specification]()~~ (WIP)
+ - [Backend API specification](https://github.com/sporia/documentation/blob/main/backend_api/api_specification.yaml)
 
 ## Wiki Pages
 ### Front-End
