@@ -12,8 +12,9 @@ need here so it's centrally available.
  - ~~[Database Script (SQL)](https://github.com/sporia/documentation/blob/main/database/01_Create_Database.sql)~~ (WIP)
  - [Backend API specification](https://github.com/sporia/documentation/blob/main/backend_api/api_specification.yaml)
 
-## Wiki Pages
+## Wiki/Web Pages
 ### Front-End
 ### Back-End
  - [API Error Codes](https://github.com/sporia/documentation/wiki/API-Error-Codes)
  - [Tenant Options](https://github.com/sporia/documentation/wiki/Tenant-Options)
+ - [API Specification](http://www.pearcenet.ch:8000/)
